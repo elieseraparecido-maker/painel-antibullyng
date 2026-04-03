@@ -1,0 +1,1782 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel Anti-Bullying — E.E. Dr. Rafael Paes de Barros</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --roxo: #6c3fc5;
+    --roxo-claro: #8b5cf6;
+    --rosa: #ec4899;
+    --laranja: #f97316;
+    --amarelo: #fbbf24;
+    --verde: #10b981;
+    --branco: #ffffff;
+    --cinza-bg: #f3f0ff;
+    --texto: #1e1b4b;
+    --texto-muted: #6b7280;
+    --borda: #e0d7ff;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--cinza-bg);
+    color: var(--texto);
+    min-height: 100vh;
+  }
+
+  /* ===== LOADER ===== */
+  .loader-overlay {
+    position: fixed; inset: 0;
+    background: linear-gradient(135deg, #4c1d95, #6c3fc5);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    transition: opacity 0.5s;
+  }
+
+  .loader-overlay.oculto { opacity: 0; pointer-events: none; }
+
+  .loader-spinner {
+    width: 52px; height: 52px;
+    border: 5px solid rgba(255,255,255,0.2);
+    border-top-color: var(--amarelo);
+    border-radius: 50%;
+    animation: spin 0.9s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .loader-overlay p {
+    color: rgba(255,255,255,0.85);
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  /* ===== HEADER ===== */
+  .header {
+    background: linear-gradient(135deg, #4c1d95 0%, #6c3fc5 50%, #7c3aed 100%);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .header::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Ccircle cx='30' cy='30' r='20'/%3E%3C/g%3E%3C/svg%3E");
+  }
+
+  .header-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 28px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+    z-index: 1;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .header-left { display: flex; align-items: center; gap: 18px; }
+
+  .header-icone {
+    width: 64px; height: 64px;
+    background: rgba(255,255,255,0.15);
+    border: 2px solid rgba(255,255,255,0.3);
+    border-radius: 18px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 32px;
+  }
+
+  .header-titulo h1 {
+    font-family: 'Fredoka One', cursive;
+    font-size: 28px;
+    color: white;
+    letter-spacing: 1px;
+  }
+
+  .header-titulo p {
+    font-size: 13px;
+    color: rgba(255,255,255,0.7);
+    margin-top: 4px;
+    font-weight: 600;
+  }
+
+  .header-badge {
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 30px;
+    padding: 8px 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: white;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .contador-badge {
+    background: var(--amarelo);
+    color: #1e1b4b;
+    border-radius: 20px;
+    padding: 2px 10px;
+    font-size: 14px;
+    font-weight: 800;
+  }
+
+  /* ===== NAV ===== */
+  .nav-tabs {
+    background: white;
+    border-bottom: 2px solid var(--borda);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 12px rgba(108,63,197,0.08);
+  }
+
+  .nav-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 32px;
+    display: flex;
+  }
+
+  .tab-btn {
+    padding: 16px 28px;
+    border: none;
+    background: none;
+    font-family: 'Nunito', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--texto-muted);
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+  }
+
+  .tab-btn:hover { color: var(--roxo); }
+  .tab-btn.ativo { color: var(--roxo); border-bottom-color: var(--roxo); }
+
+  /* ===== MAIN ===== */
+  .main {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 32px;
+  }
+
+  .tela { display: none; }
+  .tela.ativa { display: block; }
+
+  /* ===== STATS ===== */
+  .painel-topo {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  .stat-card {
+    background: white;
+    border-radius: 16px;
+    padding: 20px 22px;
+    border: 1px solid var(--borda);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    box-shadow: 0 2px 12px rgba(108,63,197,0.06);
+  }
+
+  .stat-icon {
+    width: 48px; height: 48px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+
+  .stat-icon.roxo { background: #f3f0ff; }
+  .stat-icon.rosa  { background: #fdf2f8; }
+  .stat-icon.verde { background: #ecfdf5; }
+
+  .stat-num {
+    font-family: 'Fredoka One', cursive;
+    font-size: 30px;
+    color: var(--roxo);
+    line-height: 1;
+  }
+
+  .stat-label {
+    font-size: 12px;
+    color: var(--texto-muted);
+    font-weight: 600;
+    margin-top: 2px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* ===== GALERIA ===== */
+  .galeria-titulo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .galeria-titulo h2 {
+    font-family: 'Fredoka One', cursive;
+    font-size: 22px;
+    color: var(--texto);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .btn-recarregar {
+    background: #f3f0ff;
+    border: 1px solid var(--borda);
+    color: var(--roxo);
+    padding: 8px 16px;
+    border-radius: 10px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .btn-recarregar:hover { background: #e8e0ff; }
+
+  .galeria-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+  }
+
+  /* ===== CARD ===== */
+  .trabalho-card {
+    background: white;
+    border-radius: 18px;
+    overflow: hidden;
+    border: 1px solid var(--borda);
+    box-shadow: 0 4px 16px rgba(108,63,197,0.07);
+    transition: transform 0.2s, box-shadow 0.2s;
+    animation: entrar 0.4s ease both;
+  }
+
+  @keyframes entrar {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .trabalho-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(108,63,197,0.15);
+  }
+
+  .card-foto {
+    width: 100%; height: 200px;
+    object-fit: cover;
+    display: block;
+    cursor: pointer;
+  }
+
+  .card-foto-placeholder {
+    width: 100%; height: 200px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #f3f0ff 0%, #fdf2f8 100%);
+    font-size: 48px;
+    gap: 8px;
+    color: var(--roxo-claro);
+  }
+
+  .card-foto-placeholder span {
+    font-size: 13px;
+    font-weight: 700;
+    opacity: 0.5;
+  }
+
+  .card-corpo { padding: 18px 20px; }
+
+  .card-serie {
+    display: inline-block;
+    background: #f3f0ff;
+    color: var(--roxo);
+    font-size: 11px;
+    font-weight: 800;
+    padding: 3px 10px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 10px;
+  }
+
+  .card-prof {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--texto);
+    margin-bottom: 6px;
+  }
+
+  .card-disciplina {
+    font-size: 12px;
+    color: var(--roxo-claro);
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .card-temas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-bottom: 10px;
+  }
+
+  .card-tema-chip {
+    background: #f3f0ff;
+    color: var(--roxo);
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-weight: 700;
+  }
+
+  .card-descricao {
+    font-size: 13px;
+    color: var(--texto-muted);
+    line-height: 1.6;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .card-rodape {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    background: #fafafa;
+    border-top: 1px solid var(--borda);
+  }
+
+  .card-data { font-size: 11px; color: var(--texto-muted); font-weight: 600; }
+
+  .btn-excluir {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 4px 8px;
+    border-radius: 8px;
+    transition: background 0.2s;
+    color: #ef4444;
+  }
+
+  .btn-excluir:hover { background: #fee2e2; }
+
+  /* VAZIO */
+  .vazio {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--texto-muted);
+    grid-column: 1 / -1;
+  }
+
+  .vazio .vazio-icone { font-size: 64px; margin-bottom: 16px; }
+
+  .vazio h3 {
+    font-family: 'Fredoka One', cursive;
+    font-size: 22px;
+    color: #c4b5fd;
+    margin-bottom: 8px;
+  }
+
+  /* ===== FORM ===== */
+  .form-card {
+    background: white;
+    border-radius: 20px;
+    padding: 36px;
+    border: 1px solid var(--borda);
+    box-shadow: 0 4px 24px rgba(108,63,197,0.08);
+    max-width: 680px;
+    margin: 0 auto;
+  }
+
+  .form-titulo {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+
+  .form-titulo .form-icone { font-size: 48px; display: block; margin-bottom: 12px; }
+
+  .form-titulo h2 {
+    font-family: 'Fredoka One', cursive;
+    font-size: 26px;
+    color: var(--roxo);
+  }
+
+  .form-titulo p { font-size: 14px; color: var(--texto-muted); margin-top: 6px; }
+
+  .form-grupo { margin-bottom: 22px; }
+
+  .form-grupo label {
+    display: block;
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--texto);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .form-grupo label .obrig { color: var(--rosa); margin-left: 2px; }
+
+  .form-grupo input,
+  .form-grupo select,
+  .form-grupo textarea {
+    width: 100%;
+    padding: 13px 16px;
+    border: 2px solid var(--borda);
+    border-radius: 12px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 14px;
+    color: var(--texto);
+    background: #fafafa;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+  }
+
+  .form-grupo input:focus,
+  .form-grupo select:focus,
+  .form-grupo textarea:focus {
+    border-color: var(--roxo-claro);
+    box-shadow: 0 0 0 4px rgba(139,92,246,0.1);
+    background: white;
+  }
+
+  .form-grupo textarea { resize: vertical; min-height: 120px; line-height: 1.6; }
+
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+
+  /* UPLOAD */
+  .upload-area {
+    border: 2px dashed #c4b5fd;
+    border-radius: 14px;
+    padding: 32px;
+    text-align: center;
+    background: #faf9ff;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+  }
+
+  .upload-area:hover, .upload-area.drag-over {
+    border-color: var(--roxo);
+    background: #f3f0ff;
+  }
+
+  .upload-area input[type="file"] {
+    position: absolute; inset: 0;
+    opacity: 0; cursor: pointer;
+    width: 100%; height: 100%;
+    border: none; padding: 0; background: none;
+  }
+
+  .upload-area .upload-icone { font-size: 36px; margin-bottom: 10px; }
+  .upload-area .upload-texto { font-size: 14px; font-weight: 700; color: var(--roxo); }
+  .upload-area .upload-sub { font-size: 12px; color: var(--texto-muted); margin-top: 4px; }
+
+  .preview-foto {
+    width: 100%;
+    max-height: 200px;
+    object-fit: cover;
+    border-radius: 10px;
+    display: none;
+    margin-top: 12px;
+  }
+
+  /* TEMAS */
+  .temas-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+
+  .tema-chip {
+    padding: 7px 14px;
+    border-radius: 20px;
+    border: 2px solid var(--borda);
+    background: white;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s;
+    color: var(--texto-muted);
+  }
+
+  .tema-chip:hover { border-color: var(--roxo-claro); color: var(--roxo); }
+  .tema-chip.selecionado { background: var(--roxo); border-color: var(--roxo); color: white; }
+
+  /* PROGRESSO UPLOAD */
+  .progresso-wrap {
+    display: none;
+    margin-top: 12px;
+    background: #f3f0ff;
+    border-radius: 8px;
+    height: 8px;
+    overflow: hidden;
+  }
+
+  .progresso-barra {
+    height: 100%;
+    background: linear-gradient(90deg, var(--roxo), var(--roxo-claro));
+    border-radius: 8px;
+    transition: width 0.3s;
+    width: 0%;
+  }
+
+  .progresso-texto {
+    font-size: 12px;
+    color: var(--roxo);
+    font-weight: 700;
+    margin-top: 6px;
+    display: none;
+    text-align: center;
+  }
+
+  /* BTN SUBMIT */
+  .btn-submit {
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(135deg, var(--roxo), var(--roxo-claro));
+    color: white;
+    border: none;
+    border-radius: 14px;
+    font-family: 'Fredoka One', cursive;
+    font-size: 18px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    box-shadow: 0 6px 20px rgba(108,63,197,0.35);
+    transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+    margin-top: 8px;
+  }
+
+  .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(108,63,197,0.45); }
+  .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 30px; right: 30px;
+    color: white;
+    padding: 16px 24px;
+    border-radius: 14px;
+    font-weight: 700;
+    font-size: 14px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    z-index: 999;
+    transform: translateX(200px);
+    opacity: 0;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    max-width: 320px;
+  }
+
+  .toast.sucesso { background: linear-gradient(135deg, var(--verde), #059669); }
+  .toast.erro    { background: linear-gradient(135deg, #ef4444, #dc2626); }
+  .toast.visivel { transform: translateX(0); opacity: 1; }
+
+  /* MODAL */
+  .modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.8);
+    z-index: 500;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+  }
+
+  .modal-overlay.aberto { display: flex; }
+
+  .modal-img {
+    max-width: 90vw;
+    max-height: 90vh;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+
+  .modal-fechar {
+    position: absolute;
+    top: 20px; right: 20px;
+    background: white;
+    border: none;
+    border-radius: 50%;
+    width: 40px; height: 40px;
+    font-size: 20px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  }
+
+  /* STATUS FIREBASE */
+  .firebase-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.7);
+    padding: 6px 14px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 20px;
+  }
+
+  .status-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #fbbf24;
+    animation: pulsar 1.5s infinite;
+  }
+
+  .status-dot.conectado { background: #10b981; animation: none; }
+  .status-dot.erro      { background: #ef4444; animation: none; }
+
+  @keyframes pulsar {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* ===== HISTÓRIAS ===== */
+  .historias-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 20px;
+  }
+
+  .historia-card {
+    background: white;
+    border-radius: 18px;
+    padding: 24px;
+    border: 1px solid var(--borda);
+    box-shadow: 0 4px 16px rgba(108,63,197,0.07);
+    transition: transform 0.2s, box-shadow 0.2s;
+    animation: entrar 0.4s ease both;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .historia-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 4px; height: 100%;
+    background: linear-gradient(180deg, #7c3aed, #ec4899);
+    border-radius: 4px 0 0 4px;
+  }
+
+  .historia-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(108,63,197,0.15);
+  }
+
+  .hist-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .hist-autor {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .hist-avatar {
+    width: 38px; height: 38px;
+    background: linear-gradient(135deg, #7c3aed, #ec4899);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .hist-nome-wrap .hist-nome {
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--texto);
+  }
+
+  .hist-nome-wrap .hist-tipo {
+    font-size: 11px;
+    color: var(--texto-muted);
+    font-weight: 600;
+  }
+
+  .hist-serie-badge {
+    background: #fdf2f8;
+    color: #9d174d;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 3px 10px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .hist-temas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-bottom: 12px;
+  }
+
+  .hist-tema-chip {
+    background: linear-gradient(135deg, #f3f0ff, #fdf2f8);
+    color: var(--roxo);
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-weight: 700;
+  }
+
+  .hist-texto {
+    font-size: 13.5px;
+    color: var(--texto-muted);
+    line-height: 1.7;
+    margin-bottom: 14px;
+  }
+
+  .hist-mensagem-box {
+    background: linear-gradient(135deg, #f3f0ff, #fdf2f8);
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 13px;
+    color: var(--roxo);
+    font-style: italic;
+    line-height: 1.6;
+    margin-bottom: 12px;
+    border-left: 3px solid #ec4899;
+  }
+
+  .hist-mensagem-box::before {
+    content: '💌 ';
+    font-style: normal;
+  }
+
+  .hist-rodape {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 12px;
+    border-top: 1px solid var(--borda);
+  }
+
+  .btn-editar {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 4px 8px;
+    border-radius: 8px;
+    transition: background 0.2s;
+    color: var(--roxo);
+  }
+
+  .btn-editar:hover { background: #f3f0ff; }
+
+  .btn-ia-claude {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: linear-gradient(135deg, #f97316, #fbbf24);
+    color: #1e1b4b;
+    font-family: 'Nunito', sans-serif;
+    font-size: 14px;
+    font-weight: 800;
+    padding: 12px 22px;
+    border-radius: 14px;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    box-shadow: 0 4px 16px rgba(249,115,22,0.35);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .btn-ia-claude:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(249,115,22,0.45);
+  }
+
+  /* MODAL EDIÇÃO */
+  .modal-edicao-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 600;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+    padding: 20px;
+  }
+
+  .modal-edicao-overlay.aberto { display: flex; }
+
+  .modal-edicao-box {
+    background: white;
+    border-radius: 20px;
+    padding: 36px;
+    width: 100%;
+    max-width: 640px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    position: relative;
+  }
+
+  .modal-edicao-titulo {
+    font-family: 'Fredoka One', cursive;
+    font-size: 22px;
+    color: var(--roxo);
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .modal-edicao-fechar {
+    position: absolute;
+    top: 16px; right: 16px;
+    background: #f3f0ff;
+    border: none;
+    border-radius: 50%;
+    width: 36px; height: 36px;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--roxo);
+    font-weight: 800;
+  }
+    .main { padding: 20px 16px; }
+    .painel-topo { grid-template-columns: 1fr; }
+    .form-grid { grid-template-columns: 1fr; }
+    .header-inner { padding: 20px 16px; }
+    .nav-inner { overflow-x: auto; padding: 0 8px; }
+    .tab-btn { padding: 14px 16px; font-size: 13px; }
+    .galeria-grid { grid-template-columns: 1fr; }
+    .form-card { padding: 24px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- LOADER -->
+<div class="loader-overlay" id="loader">
+  <div class="loader-spinner"></div>
+  <p>Conectando ao banco de dados...</p>
+</div>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-inner">
+    <div class="header-left">
+      <div class="header-icone">🛡️</div>
+      <div class="header-titulo">
+        <h1>Painel Anti-Bullying</h1>
+        <p>E.E. Dr. Rafael Paes de Barros • Ano Letivo 2026</p>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <div class="firebase-status">
+        <div class="status-dot" id="status-dot"></div>
+        <span id="status-texto">Conectando...</span>
+      </div>
+      <div class="header-badge">
+        💜 Trabalhos: <span class="contador-badge" id="total-badge">0</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- NAV -->
+<div class="nav-tabs">
+  <div class="nav-inner">
+    <button class="tab-btn ativo" onclick="trocarTela('galeria', this)">🖼️ Painel de Trabalhos</button>
+    <button class="tab-btn" onclick="trocarTela('historias', this)">💬 Histórias da Vida Real</button>
+    <button class="tab-btn" onclick="trocarTela('cadastro', this)">✏️ Cadastrar Trabalho</button>
+    <button class="tab-btn" id="tab-hist-oculta" style="display:none" onclick="trocarTela('cadastro-historia', this)">✍️ Nova História</button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- GALERIA -->
+  <div class="tela ativa" id="tela-galeria">
+    <div class="painel-topo">
+      <div class="stat-card">
+        <div class="stat-icon roxo">👩‍🏫</div>
+        <div>
+          <div class="stat-num" id="stat-professores">0</div>
+          <div class="stat-label">Professores</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon rosa">📚</div>
+        <div>
+          <div class="stat-num" id="stat-series">0</div>
+          <div class="stat-label">Séries participantes</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon verde">🤝</div>
+        <div>
+          <div class="stat-num" id="stat-trabalhos">0</div>
+          <div class="stat-label">Ações cadastradas</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="galeria-titulo">
+      <h2>🌟 Trabalhos da Escola</h2>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <a href="https://claude.ai" target="_blank" class="btn-ia-claude">🤖 Ajuda com IA — Claude</a>
+        <button class="btn-recarregar" onclick="carregarTrabalhos()">🔄 Atualizar</button>
+      </div>
+    </div>
+
+    <div class="galeria-grid" id="galeria-grid">
+      <div class="vazio">
+        <div class="vazio-icone">⏳</div>
+        <h3>Carregando...</h3>
+      </div>
+    </div>
+  </div>
+
+  <!-- HISTÓRIAS DA VIDA REAL -->
+  <div class="tela" id="tela-historias">
+
+    <div class="galeria-titulo">
+      <h2>💬 Histórias da Vida Real</h2>
+      <button class="btn-recarregar" onclick="carregarHistorias()">🔄 Atualizar</button>
+    </div>
+
+    <div style="background:linear-gradient(135deg,#4c1d95,#7c3aed);border-radius:16px;padding:22px 28px;margin-bottom:28px;display:flex;align-items:center;gap:18px;">
+      <div style="font-size:36px">💜</div>
+      <div>
+        <div style="font-family:'Fredoka One',cursive;font-size:18px;color:white;margin-bottom:4px">Espaço seguro de escuta</div>
+        <div style="font-size:13px;color:rgba(255,255,255,0.8);line-height:1.6">Aqui professores e alunos podem compartilhar relatos reais sobre bullying — situações vivenciadas, superadas ou em andamento. Cada história ajuda a escola a agir melhor.</div>
+      </div>
+      <button onclick="trocarTela('cadastro-historia', document.getElementById('tab-hist-oculta'))" style="background:var(--amarelo);border:none;border-radius:12px;padding:12px 20px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;color:#1e1b4b;cursor:pointer;white-space:nowrap;flex-shrink:0;">✍️ Compartilhar história</button>
+    </div>
+
+    <div class="historias-grid" id="historias-grid">
+      <div class="vazio">
+        <div class="vazio-icone">⏳</div>
+        <h3>Carregando...</h3>
+      </div>
+    </div>
+  </div>
+
+  <!-- CADASTRO HISTÓRIA -->
+  <div class="tela" id="tela-cadastro-historia">
+    <div class="form-card">
+      <div class="form-titulo">
+        <span class="form-icone">💬</span>
+        <h2>Compartilhar História</h2>
+        <p>Relatos reais que ajudam a combater o bullying na escola</p>
+      </div>
+
+      <div style="background:#fff8e1;border:1px solid #fbbf24;border-radius:12px;padding:14px 18px;margin-bottom:24px;font-size:13px;color:#92400e;font-weight:600;line-height:1.6;">
+        🔒 A identidade de quem relata é protegida. Você pode escolher permanecer anônimo.
+      </div>
+
+      <div class="form-grid">
+        <div class="form-grupo">
+          <label>Quem compartilha <span class="obrig">*</span></label>
+          <select id="hist-tipo">
+            <option value="">Selecione...</option>
+            <option>👩‍🏫 Professor(a)</option>
+            <option>🧑‍🎓 Aluno(a)</option>
+            <option>👨‍👩‍👧 Familiar</option>
+            <option>🙋 Anônimo</option>
+          </select>
+        </div>
+        <div class="form-grupo">
+          <label>Nome (opcional)</label>
+          <input type="text" id="hist-nome" placeholder="Deixe em branco para anônimo" />
+        </div>
+      </div>
+
+      <div class="form-grupo">
+        <label>Série / Turma envolvida</label>
+        <select id="hist-serie">
+          <option value="">Selecione (opcional)...</option>
+          <option>1º Ano — Ensino Fundamental</option>
+          <option>2º Ano — Ensino Fundamental</option>
+          <option>3º Ano — Ensino Fundamental</option>
+          <option>4º Ano — Ensino Fundamental</option>
+          <option>5º Ano — Ensino Fundamental</option>
+          <option>6º Ano — Ensino Fundamental</option>
+          <option>7º Ano — Ensino Fundamental</option>
+          <option>8º Ano — Ensino Fundamental</option>
+          <option>9º Ano — Ensino Fundamental</option>
+          <option>1º Ano — Ensino Médio</option>
+          <option>2º Ano — Ensino Médio</option>
+          <option>3º Ano — Ensino Médio</option>
+          <option>3ª Série A — Ensino Médio ADM</option>
+        </select>
+      </div>
+
+      <div class="form-grupo">
+        <label>Tipo de situação <span class="obrig">*</span></label>
+        <div class="temas-grid">
+          <div class="tema-chip hist-tema" onclick="selecionarHistTema(this)">😢 Fui vítima</div>
+          <div class="tema-chip hist-tema" onclick="selecionarHistTema(this)">👀 Fui testemunha</div>
+          <div class="tema-chip hist-tema" onclick="selecionarHistTema(this)">🌱 Superei o bullying</div>
+          <div class="tema-chip hist-tema" onclick="selecionarHistTema(this)">🤝 Ajudei alguém</div>
+          <div class="tema-chip hist-tema" onclick="selecionarHistTema(this)">📱 Cyberbullying</div>
+          <div class="tema-chip hist-tema" onclick="selecionarHistTema(this)">⚠️ Situação em andamento</div>
+        </div>
+      </div>
+
+      <div class="form-grupo">
+        <label>Conte sua história <span class="obrig">*</span></label>
+        <textarea id="hist-texto" style="min-height:160px" placeholder="Descreva o que aconteceu, como se sentiu, como foi resolvido (ou não)... Este espaço é seu."></textarea>
+      </div>
+
+      <div class="form-grupo">
+        <label>Mensagem para quem passar por isso</label>
+        <textarea id="hist-mensagem" style="min-height:80px" placeholder="Opcional: deixe uma mensagem de apoio, conselho ou encorajamento..."></textarea>
+      </div>
+
+      <button class="btn-submit" id="btn-submit-hist" onclick="cadastrarHistoria()" style="background:linear-gradient(135deg,#7c3aed,#ec4899)">
+        💜 Publicar História
+      </button>
+    </div>
+  </div>
+
+  <!-- CADASTRO TRABALHO -->
+  <div class="tela" id="tela-cadastro">
+    <div class="form-card">
+      <div class="form-titulo">
+        <span class="form-icone">✏️</span>
+        <h2>Cadastrar Trabalho</h2>
+        <p>Registre a ação da sua turma no combate ao bullying</p>
+      </div>
+
+      <div class="form-grupo">
+        <label>Nome do Professor <span class="obrig">*</span></label>
+        <input type="text" id="inp-professor" placeholder="Ex: Profª Maria Aparecida" />
+      </div>
+
+      <div class="form-grid">
+        <div class="form-grupo">
+          <label>Série / Turma <span class="obrig">*</span></label>
+          <select id="inp-serie">
+            <option value="">Selecione...</option>
+            <option>1º Ano — Ensino Fundamental</option>
+            <option>2º Ano — Ensino Fundamental</option>
+            <option>3º Ano — Ensino Fundamental</option>
+            <option>4º Ano — Ensino Fundamental</option>
+            <option>5º Ano — Ensino Fundamental</option>
+            <option>6º Ano — Ensino Fundamental</option>
+            <option>7º Ano — Ensino Fundamental</option>
+            <option>8º Ano — Ensino Fundamental</option>
+            <option>9º Ano — Ensino Fundamental</option>
+            <option>1º Ano — Ensino Médio</option>
+            <option>2º Ano — Ensino Médio</option>
+            <option>3º Ano — Ensino Médio</option>
+            <option>3ª Série A — Ensino Médio ADM</option>
+          </select>
+        </div>
+        <div class="form-grupo">
+          <label>Disciplina</label>
+          <input type="text" id="inp-disciplina" placeholder="Ex: Português, Arte..." />
+        </div>
+      </div>
+
+      <div class="form-grupo">
+        <label>Temas abordados</label>
+        <div class="temas-grid" id="temas-grid">
+          <div class="tema-chip" onclick="selecionarTema(this)">🗣️ Bullying verbal</div>
+          <div class="tema-chip" onclick="selecionarTema(this)">👊 Bullying físico</div>
+          <div class="tema-chip" onclick="selecionarTema(this)">📱 Cyberbullying</div>
+          <div class="tema-chip" onclick="selecionarTema(this)">🚫 Preconceito</div>
+          <div class="tema-chip" onclick="selecionarTema(this)">🤝 Empatia</div>
+          <div class="tema-chip" onclick="selecionarTema(this)">💜 Respeito às diferenças</div>
+          <div class="tema-chip" onclick="selecionarTema(this)">🆘 Como pedir ajuda</div>
+          <div class="tema-chip" onclick="selecionarTema(this)">✌️ Resolução de conflitos</div>
+        </div>
+      </div>
+
+      <div class="form-grupo">
+        <label>Descrição da atividade <span class="obrig">*</span></label>
+        <textarea id="inp-descricao" placeholder="Descreva o que você vai trabalhar em sala: dinâmicas, rodas de conversa, produções, debates, filmes, etc."></textarea>
+      </div>
+
+      <div class="form-grupo">
+        <label>Foto do trabalho</label>
+        <div class="upload-area" id="upload-area">
+          <input type="file" id="inp-foto" accept="image/*" onchange="previewFoto(this)" />
+          <div class="upload-icone">📷</div>
+          <div class="upload-texto">Clique ou arraste uma foto</div>
+          <div class="upload-sub">JPG, PNG • máx. 5MB</div>
+          <img class="preview-foto" id="preview-foto" src="" alt="preview" />
+        </div>
+        <div class="progresso-wrap" id="progresso-wrap">
+          <div class="progresso-barra" id="progresso-barra"></div>
+        </div>
+        <div class="progresso-texto" id="progresso-texto"></div>
+      </div>
+
+      <button class="btn-submit" id="btn-submit" onclick="cadastrar()">
+        💾 Salvar no Painel
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<!-- MODAL EDIÇÃO -->
+<div class="modal-edicao-overlay" id="modal-edicao" onclick="fecharModalEdicao(event)">
+  <div class="modal-edicao-box">
+    <button class="modal-edicao-fechar" onclick="fecharModalEdicao()">✕</button>
+    <div class="modal-edicao-titulo">✏️ Editar Cadastro</div>
+
+    <input type="hidden" id="edit-id" />
+    <input type="hidden" id="edit-fotoPath" />
+    <input type="hidden" id="edit-fotoURL" />
+
+    <div class="form-grupo">
+      <label>Nome do Professor <span class="obrig">*</span></label>
+      <input type="text" id="edit-professor" placeholder="Ex: Profª Maria Aparecida" />
+    </div>
+
+    <div class="form-grid">
+      <div class="form-grupo">
+        <label>Série / Turma <span class="obrig">*</span></label>
+        <select id="edit-serie">
+          <option value="">Selecione...</option>
+          <option>1º Ano — Ensino Fundamental</option>
+          <option>2º Ano — Ensino Fundamental</option>
+          <option>3º Ano — Ensino Fundamental</option>
+          <option>4º Ano — Ensino Fundamental</option>
+          <option>5º Ano — Ensino Fundamental</option>
+          <option>6º Ano — Ensino Fundamental</option>
+          <option>7º Ano — Ensino Fundamental</option>
+          <option>8º Ano — Ensino Fundamental</option>
+          <option>9º Ano — Ensino Fundamental</option>
+          <option>1º Ano — Ensino Médio</option>
+          <option>2º Ano — Ensino Médio</option>
+          <option>3º Ano — Ensino Médio</option>
+          <option>3ª Série A — Ensino Médio ADM</option>
+        </select>
+      </div>
+      <div class="form-grupo">
+        <label>Disciplina</label>
+        <input type="text" id="edit-disciplina" placeholder="Ex: Português, Arte..." />
+      </div>
+    </div>
+
+    <div class="form-grupo">
+      <label>Temas abordados</label>
+      <div class="temas-grid" id="edit-temas-grid">
+        <div class="tema-chip" onclick="selecionarTemaEdit(this)">🗣️ Bullying verbal</div>
+        <div class="tema-chip" onclick="selecionarTemaEdit(this)">👊 Bullying físico</div>
+        <div class="tema-chip" onclick="selecionarTemaEdit(this)">📱 Cyberbullying</div>
+        <div class="tema-chip" onclick="selecionarTemaEdit(this)">🚫 Preconceito</div>
+        <div class="tema-chip" onclick="selecionarTemaEdit(this)">🤝 Empatia</div>
+        <div class="tema-chip" onclick="selecionarTemaEdit(this)">💜 Respeito às diferenças</div>
+        <div class="tema-chip" onclick="selecionarTemaEdit(this)">🆘 Como pedir ajuda</div>
+        <div class="tema-chip" onclick="selecionarTemaEdit(this)">✌️ Resolução de conflitos</div>
+      </div>
+    </div>
+
+    <div class="form-grupo">
+      <label>Descrição da atividade <span class="obrig">*</span></label>
+      <textarea id="edit-descricao" style="min-height:120px" placeholder="Descreva a atividade..."></textarea>
+    </div>
+
+    <div class="form-grupo">
+      <label>Adicionar / Trocar foto</label>
+      <div class="upload-area" id="edit-upload-area">
+        <input type="file" id="edit-foto" accept="image/*" onchange="previewFotoEdit(this)" />
+        <div class="upload-icone">📷</div>
+        <div class="upload-texto">Clique ou arraste para trocar a foto</div>
+        <div class="upload-sub">JPG, PNG • máx. 5MB</div>
+      </div>
+      <img class="preview-foto" id="edit-preview-foto" src="" alt="preview" style="display:none;margin-top:10px;" />
+      <div class="progresso-wrap" id="edit-progresso-wrap">
+        <div class="progresso-barra" id="edit-progresso-barra"></div>
+      </div>
+      <div class="progresso-texto" id="edit-progresso-texto"></div>
+    </div>
+
+    <button class="btn-submit" id="btn-salvar-edicao" onclick="salvarEdicao()" style="margin-top:8px">
+      💾 Salvar Alterações
+    </button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal" onclick="fecharModal()">
+  <button class="modal-fechar" onclick="fecharModal()">✕</button>
+  <img class="modal-img" id="modal-img" src="" alt="" />
+</div>
+
+<!-- FIREBASE SDK -->
+<script type="module">
+  import { initializeApp }            from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, orderBy, query }
+    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject }
+    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+
+  // ===== CONFIG FIREBASE =====
+  const firebaseConfig = {
+    apiKey: "AIzaSyDXMM_In8KIvTDho2-Z-G76C6sHMz0JKsI",
+    authDomain: "face-bullying-47662.firebaseapp.com",
+    projectId: "face-bullying-47662",
+    storageBucket: "face-bullying-47662.firebasestorage.app",
+    messagingSenderId: "30762083387",
+    appId: "1:30762083387:web:c8e2b2488ee6b6ba2da81e"
+  };
+
+  const app     = initializeApp(firebaseConfig);
+  const db      = getFirestore(app);
+  const storage = getStorage(app);
+
+  let trabalhos       = [];
+  let temasSelecionados = [];
+  let arquivoFoto     = null;
+
+  // ===== STATUS =====
+  function setStatus(estado) {
+    const dot   = document.getElementById('status-dot');
+    const texto = document.getElementById('status-texto');
+    if (estado === 'ok')  { dot.className = 'status-dot conectado'; texto.textContent = 'Conectado'; }
+    if (estado === 'err') { dot.className = 'status-dot erro';      texto.textContent = 'Sem conexão'; }
+    if (estado === 'wait'){ dot.className = 'status-dot';           texto.textContent = 'Conectando...'; }
+  }
+
+  // ===== CARREGAR TRABALHOS =====
+  window.carregarTrabalhos = async function() {
+    try {
+      const q    = query(collection(db, 'trabalhos'), orderBy('criadoEm', 'desc'));
+      const snap = await getDocs(q);
+      trabalhos  = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      setStatus('ok');
+      renderizarGaleria();
+      atualizarStats();
+    } catch(e) {
+      setStatus('err');
+      mostrarToast('❌ Erro ao carregar dados: ' + e.message, 'erro');
+      renderizarVazio('Erro ao carregar. Verifique sua conexão.');
+    } finally {
+      ocultarLoader();
+    }
+  };
+
+  // ===== RENDERIZAR GALERIA =====
+  function renderizarGaleria() {
+    const grid = document.getElementById('galeria-grid');
+    document.getElementById('total-badge').textContent = trabalhos.length;
+
+    if (trabalhos.length === 0) {
+      grid.innerHTML = `
+        <div class="vazio">
+          <div class="vazio-icone">🌱</div>
+          <h3>Nenhum trabalho ainda!</h3>
+          <p>Clique em "Cadastrar Trabalho" e registre a primeira ação da sua turma.</p>
+        </div>`;
+      return;
+    }
+
+    grid.innerHTML = trabalhos.map((t, i) => `
+      <div class="trabalho-card" style="animation-delay:${i*0.06}s">
+        ${t.fotoURL
+          ? `<img class="card-foto" src="${t.fotoURL}" alt="Foto" loading="lazy" onclick="abrirModal('${t.fotoURL}')" />`
+          : `<div class="card-foto-placeholder">🎨<span>Sem foto</span></div>`}
+        <div class="card-corpo">
+          <span class="card-serie">${esc(t.serie)}</span>
+          <div class="card-prof">👩‍🏫 ${esc(t.professor)}</div>
+          ${t.disciplina ? `<div class="card-disciplina">📖 ${esc(t.disciplina)}</div>` : ''}
+          ${t.temas && t.temas.length
+            ? `<div class="card-temas">${t.temas.map(tm=>`<span class="card-tema-chip">${esc(tm)}</span>`).join('')}</div>`
+            : ''}
+          <div class="card-descricao">${esc(t.descricao)}</div>
+        </div>
+        <div class="card-rodape">
+          <span class="card-data">📅 ${t.data || ''}</span>
+          <div style="display:flex;gap:4px">
+            <button class="btn-editar" title="Editar cadastro" onclick="abrirModalEdicao('${t.id}')">✏️</button>
+            <button class="btn-excluir" onclick="excluir('${t.id}','${t.fotoPath||''}')">🗑️</button>
+          </div>
+        </div>
+      </div>`).join('');
+  }
+
+  function renderizarVazio(msg) {
+    document.getElementById('galeria-grid').innerHTML = `
+      <div class="vazio">
+        <div class="vazio-icone">⚠️</div>
+        <h3>${msg}</h3>
+      </div>`;
+  }
+
+  // ===== STATS =====
+  function atualizarStats() {
+    document.getElementById('stat-trabalhos').textContent  = trabalhos.length;
+    document.getElementById('stat-professores').textContent = new Set(trabalhos.map(t=>t.professor)).size;
+    document.getElementById('stat-series').textContent     = new Set(trabalhos.map(t=>t.serie)).size;
+  }
+
+  // ===== CADASTRAR =====
+  window.cadastrar = async function() {
+    const professor = document.getElementById('inp-professor').value.trim();
+    const serie     = document.getElementById('inp-serie').value;
+    const disciplina= document.getElementById('inp-disciplina').value.trim();
+    const descricao = document.getElementById('inp-descricao').value.trim();
+
+    if (!professor) { mostrarToast('⚠️ Informe o nome do professor.', 'erro'); return; }
+    if (!serie)     { mostrarToast('⚠️ Selecione a série/turma.', 'erro');    return; }
+    if (!descricao) { mostrarToast('⚠️ Descreva a atividade.', 'erro');       return; }
+
+    const btn = document.getElementById('btn-submit');
+    btn.disabled    = true;
+    btn.textContent = '⏳ Salvando...';
+
+    try {
+      let fotoURL = null, fotoPath = null;
+
+      // Upload da foto se houver
+      if (arquivoFoto) {
+        fotoPath = `fotos/${Date.now()}_${arquivoFoto.name}`;
+        const storageRef = ref(storage, fotoPath);
+        const task = uploadBytesResumable(storageRef, arquivoFoto);
+
+        // Mostrar progresso
+        document.getElementById('progresso-wrap').style.display  = 'block';
+        document.getElementById('progresso-texto').style.display = 'block';
+
+        await new Promise((resolve, reject) => {
+          task.on('state_changed',
+            snap => {
+              const pct = Math.round(snap.bytesTransferred / snap.totalBytes * 100);
+              document.getElementById('progresso-barra').style.width = pct + '%';
+              document.getElementById('progresso-texto').textContent = `Enviando foto: ${pct}%`;
+            },
+            reject,
+            async () => {
+              fotoURL = await getDownloadURL(task.snapshot.ref);
+              resolve();
+            }
+          );
+        });
+      }
+
+      // Salvar no Firestore
+      const agora = new Date();
+      await addDoc(collection(db, 'trabalhos'), {
+        professor,
+        serie,
+        disciplina,
+        temas: [...temasSelecionados],
+        descricao,
+        fotoURL,
+        fotoPath,
+        data: agora.toLocaleDateString('pt-BR'),
+        criadoEm: agora.toISOString()
+      });
+
+      mostrarToast('✅ Trabalho salvo com sucesso!', 'sucesso');
+      limparForm();
+      await carregarTrabalhos();
+
+      setTimeout(() => {
+        trocarTela('galeria', document.querySelector('.tab-btn'));
+      }, 1000);
+
+    } catch(e) {
+      mostrarToast('❌ Erro ao salvar: ' + e.message, 'erro');
+    } finally {
+      btn.disabled    = false;
+      btn.textContent = '💾 Salvar no Painel';
+      document.getElementById('progresso-wrap').style.display  = 'none';
+      document.getElementById('progresso-texto').style.display = 'none';
+      document.getElementById('progresso-barra').style.width   = '0%';
+    }
+  };
+
+  // ===== EXCLUIR =====
+  window.excluir = async function(id, fotoPath) {
+    if (!confirm('Remover este trabalho do painel?')) return;
+    try {
+      await deleteDoc(doc(db, 'trabalhos', id));
+      if (fotoPath) {
+        try { await deleteObject(ref(storage, fotoPath)); } catch(_) {}
+      }
+      trabalhos = trabalhos.filter(t => t.id !== id);
+      renderizarGaleria();
+      atualizarStats();
+      mostrarToast('🗑️ Trabalho removido.', 'sucesso');
+    } catch(e) {
+      mostrarToast('❌ Erro ao remover: ' + e.message, 'erro');
+    }
+  };
+
+  // ===== PREVIEW FOTO =====
+  window.previewFoto = function(input) {
+    arquivoFoto = input.files[0];
+    if (!arquivoFoto) return;
+    if (arquivoFoto.size > 5 * 1024 * 1024) {
+      mostrarToast('⚠️ Foto muito grande. Máximo 5MB.', 'erro');
+      arquivoFoto = null;
+      input.value = '';
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = e => {
+      const prev = document.getElementById('preview-foto');
+      prev.src = e.target.result;
+      prev.style.display = 'block';
+    };
+    reader.readAsDataURL(arquivoFoto);
+  };
+
+  // ===== TEMAS =====
+  window.selecionarTema = function(el) {
+    el.classList.toggle('selecionado');
+    const tema = el.textContent.trim();
+    temasSelecionados = el.classList.contains('selecionado')
+      ? [...temasSelecionados, tema]
+      : temasSelecionados.filter(t => t !== tema);
+  };
+
+  // ===== LIMPAR FORM =====
+  function limparForm() {
+    ['inp-professor','inp-disciplina','inp-descricao'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('inp-serie').value = '';
+    document.getElementById('inp-foto').value  = '';
+    document.getElementById('preview-foto').style.display = 'none';
+    document.querySelectorAll('.tema-chip').forEach(c => c.classList.remove('selecionado'));
+    temasSelecionados = [];
+    arquivoFoto = null;
+  }
+
+  // ===== MODAL =====
+  window.abrirModal = function(src) {
+    document.getElementById('modal-img').src = src;
+    document.getElementById('modal').classList.add('aberto');
+  };
+
+  window.fecharModal = function() {
+    document.getElementById('modal').classList.remove('aberto');
+  };
+
+  // ===== TOAST =====
+  function mostrarToast(msg, tipo) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className   = `toast ${tipo} visivel`;
+    setTimeout(() => t.classList.remove('visivel'), 3500);
+  }
+
+  // ===== NAVEGAÇÃO =====
+  window.trocarTela = function(tela, btn) {
+    document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('ativo'));
+    document.getElementById('tela-' + tela).classList.add('ativa');
+    btn.classList.add('ativo');
+  };
+
+  // ===== LOADER =====
+  function ocultarLoader() {
+    const l = document.getElementById('loader');
+    l.classList.add('oculto');
+    setTimeout(() => l.style.display = 'none', 500);
+  }
+
+  // ===== DRAG & DROP =====
+  const uploadArea = document.getElementById('upload-area');
+  uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.classList.add('drag-over'); });
+  uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('drag-over'));
+  uploadArea.addEventListener('drop', e => {
+    e.preventDefault();
+    uploadArea.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) {
+      arquivoFoto = file;
+      const dt = new DataTransfer();
+      dt.items.add(file);
+      document.getElementById('inp-foto').files = dt.files;
+      previewFoto(document.getElementById('inp-foto'));
+    }
+  });
+
+  // ===== ESCAPE HTML =====
+  function esc(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  let historias = [];
+  let histTemasSelecionados = [];
+
+  // ===== CARREGAR HISTÓRIAS =====
+  window.carregarHistorias = async function() {
+    try {
+      const q    = query(collection(db, 'historias'), orderBy('criadoEm', 'desc'));
+      const snap = await getDocs(q);
+      historias  = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderizarHistorias();
+    } catch(e) {
+      document.getElementById('historias-grid').innerHTML = `<div class="vazio"><div class="vazio-icone">⚠️</div><h3>Erro ao carregar histórias.</h3></div>`;
+    }
+  };
+
+  function renderizarHistorias() {
+    const grid = document.getElementById('historias-grid');
+    if (historias.length === 0) {
+      grid.innerHTML = `<div class="vazio"><div class="vazio-icone">💬</div><h3>Nenhuma história ainda!</h3><p>Seja o primeiro a compartilhar um relato.</p></div>`;
+      return;
+    }
+    const emojis = {'👩‍🏫 Professor(a)':'👩‍🏫','🧑‍🎓 Aluno(a)':'🧑‍🎓','👨‍👩‍👧 Familiar':'👨‍👩‍👧','🙋 Anônimo':'🙋'};
+    grid.innerHTML = historias.map((h, i) => `
+      <div class="historia-card" style="animation-delay:${i*0.06}s">
+        <div class="hist-header">
+          <div class="hist-autor">
+            <div class="hist-avatar">${emojis[h.tipo] || '💜'}</div>
+            <div class="hist-nome-wrap">
+              <div class="hist-nome">${esc(h.nome || 'Anônimo')}</div>
+              <div class="hist-tipo">${esc(h.tipo || '')}</div>
+            </div>
+          </div>
+          ${h.serie ? `<span class="hist-serie-badge">${esc(h.serie)}</span>` : ''}
+        </div>
+        ${h.temas && h.temas.length ? `<div class="hist-temas">${h.temas.map(t=>`<span class="hist-tema-chip">${esc(t)}</span>`).join('')}</div>` : ''}
+        <div class="hist-texto">${esc(h.texto)}</div>
+        ${h.mensagem ? `<div class="hist-mensagem-box">${esc(h.mensagem)}</div>` : ''}
+        <div class="hist-rodape">
+          <span class="card-data">📅 ${h.data || ''}</span>
+          <button class="btn-excluir" onclick="excluirHistoria('${h.id}')">🗑️</button>
+        </div>
+      </div>`).join('');
+  }
+
+  window.excluirHistoria = async function(id) {
+    if (!confirm('Remover esta história?')) return;
+    try {
+      await deleteDoc(doc(db, 'historias', id));
+      historias = historias.filter(h => h.id !== id);
+      renderizarHistorias();
+      mostrarToast('🗑️ História removida.', 'sucesso');
+    } catch(e) {
+      mostrarToast('❌ Erro ao remover: ' + e.message, 'erro');
+    }
+  };
+
+  window.selecionarHistTema = function(el) {
+    el.classList.toggle('selecionado');
+    const tema = el.textContent.trim();
+    histTemasSelecionados = el.classList.contains('selecionado')
+      ? [...histTemasSelecionados, tema]
+      : histTemasSelecionados.filter(t => t !== tema);
+  };
+
+  window.cadastrarHistoria = async function() {
+    const tipo     = document.getElementById('hist-tipo').value;
+    const nome     = document.getElementById('hist-nome').value.trim();
+    const serie    = document.getElementById('hist-serie').value;
+    const texto    = document.getElementById('hist-texto').value.trim();
+    const mensagem = document.getElementById('hist-mensagem').value.trim();
+
+    if (!tipo)  { mostrarToast('⚠️ Selecione quem compartilha.', 'erro'); return; }
+    if (!texto) { mostrarToast('⚠️ Escreva sua história.', 'erro');        return; }
+
+    const btn = document.getElementById('btn-submit-hist');
+    btn.disabled = true;
+    btn.textContent = '⏳ Publicando...';
+
+    try {
+      const agora = new Date();
+      await addDoc(collection(db, 'historias'), {
+        tipo, nome: nome || 'Anônimo', serie,
+        temas: [...histTemasSelecionados],
+        texto, mensagem,
+        data: agora.toLocaleDateString('pt-BR'),
+        criadoEm: agora.toISOString()
+      });
+      mostrarToast('💜 História publicada!', 'sucesso');
+      // limpar
+      ['hist-nome','hist-texto','hist-mensagem'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById('hist-tipo').value = '';
+      document.getElementById('hist-serie').value = '';
+      document.querySelectorAll('.hist-tema').forEach(c => c.classList.remove('selecionado'));
+      histTemasSelecionados = [];
+      await carregarHistorias();
+      setTimeout(() => trocarTela('historias', document.querySelectorAll('.tab-btn')[1]), 1000);
+    } catch(e) {
+      mostrarToast('❌ Erro: ' + e.message, 'erro');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '💜 Publicar História';
+    }
+  };
+
+  // ===== EDITAR =====
+  let editTemasSelecionados = [];
+  let editArquivoFoto = null;
+
+  window.abrirModalEdicao = function(id) {
+    const t = trabalhos.find(w => w.id === id);
+    if (!t) return;
+
+    document.getElementById('edit-id').value        = t.id;
+    document.getElementById('edit-fotoPath').value  = t.fotoPath || '';
+    document.getElementById('edit-fotoURL').value   = t.fotoURL  || '';
+    document.getElementById('edit-professor').value = t.professor || '';
+    document.getElementById('edit-disciplina').value= t.disciplina || '';
+    document.getElementById('edit-descricao').value = t.descricao || '';
+
+    // Série
+    const sel = document.getElementById('edit-serie');
+    sel.value = t.serie || '';
+
+    // Preview foto existente
+    const prev = document.getElementById('edit-preview-foto');
+    if (t.fotoURL) { prev.src = t.fotoURL; prev.style.display = 'block'; }
+    else { prev.style.display = 'none'; }
+
+    // Temas
+    editTemasSelecionados = [...(t.temas || [])];
+    document.querySelectorAll('#edit-temas-grid .tema-chip').forEach(chip => {
+      chip.classList.toggle('selecionado', editTemasSelecionados.includes(chip.textContent.trim()));
+    });
+
+    editArquivoFoto = null;
+    document.getElementById('edit-foto').value = '';
+    document.getElementById('edit-progresso-wrap').style.display  = 'none';
+    document.getElementById('edit-progresso-texto').style.display = 'none';
+
+    document.getElementById('modal-edicao').classList.add('aberto');
+  };
+
+  window.fecharModalEdicao = function(e) {
+    if (e && e.target !== document.getElementById('modal-edicao')) return;
+    document.getElementById('modal-edicao').classList.remove('aberto');
+  };
+
+  window.selecionarTemaEdit = function(el) {
+    el.classList.toggle('selecionado');
+    const tema = el.textContent.trim();
+    editTemasSelecionados = el.classList.contains('selecionado')
+      ? [...editTemasSelecionados, tema]
+      : editTemasSelecionados.filter(t => t !== tema);
+  };
+
+  window.previewFotoEdit = function(input) {
+    editArquivoFoto = input.files[0];
+    if (!editArquivoFoto) return;
+    if (editArquivoFoto.size > 5 * 1024 * 1024) {
+      mostrarToast('⚠️ Foto muito grande. Máximo 5MB.', 'erro');
+      editArquivoFoto = null; input.value = ''; return;
+    }
+    const reader = new FileReader();
+    reader.onload = e => {
+      const prev = document.getElementById('edit-preview-foto');
+      prev.src = e.target.result; prev.style.display = 'block';
+    };
+    reader.readAsDataURL(editArquivoFoto);
+  };
+
+  window.salvarEdicao = async function() {
+    const id         = document.getElementById('edit-id').value;
+    const professor  = document.getElementById('edit-professor').value.trim();
+    const serie      = document.getElementById('edit-serie').value;
+    const disciplina = document.getElementById('edit-disciplina').value.trim();
+    const descricao  = document.getElementById('edit-descricao').value.trim();
+    let fotoURL      = document.getElementById('edit-fotoURL').value;
+    let fotoPath     = document.getElementById('edit-fotoPath').value;
+
+    if (!professor) { mostrarToast('⚠️ Informe o nome do professor.', 'erro'); return; }
+    if (!serie)     { mostrarToast('⚠️ Selecione a série/turma.', 'erro');      return; }
+    if (!descricao) { mostrarToast('⚠️ Preencha a descrição.', 'erro');          return; }
+
+    const btn = document.getElementById('btn-salvar-edicao');
+    btn.disabled = true; btn.textContent = '⏳ Salvando...';
+
+    try {
+      // Upload nova foto se houver
+      if (editArquivoFoto) {
+        document.getElementById('edit-progresso-wrap').style.display  = 'block';
+        document.getElementById('edit-progresso-texto').style.display = 'block';
+        // Deletar foto antiga
+        if (fotoPath) {
+          try { await deleteObject(ref(storage, fotoPath)); } catch(_) {}
+        }
+        const ext  = editArquivoFoto.name.split('.').pop();
+        fotoPath   = `fotos/${Date.now()}.${ext}`;
+        const task = uploadBytesResumable(ref(storage, fotoPath), editArquivoFoto);
+        await new Promise((resolve, reject) => {
+          task.on('state_changed',
+            snap => {
+              const pct = Math.round(snap.bytesTransferred / snap.totalBytes * 100);
+              document.getElementById('edit-progresso-barra').style.width = pct + '%';
+              document.getElementById('edit-progresso-texto').textContent = `Enviando: ${pct}%`;
+            }, reject,
+            async () => { fotoURL = await getDownloadURL(task.snapshot.ref); resolve(); }
+          );
+        });
+      }
+
+      // Atualizar no Firestore
+      const { updateDoc } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+      await updateDoc(doc(db, 'trabalhos', id), {
+        professor, serie, disciplina,
+        temas: [...editTemasSelecionados],
+        descricao, fotoURL, fotoPath
+      });
+
+      mostrarToast('✅ Cadastro atualizado!', 'sucesso');
+      document.getElementById('modal-edicao').classList.remove('aberto');
+      await carregarTrabalhos();
+
+    } catch(e) {
+      mostrarToast('❌ Erro ao salvar: ' + e.message, 'erro');
+    } finally {
+      btn.disabled = false; btn.textContent = '💾 Salvar Alterações';
+      document.getElementById('edit-progresso-wrap').style.display  = 'none';
+      document.getElementById('edit-progresso-texto').style.display = 'none';
+      document.getElementById('edit-progresso-barra').style.width   = '0%';
+    }
+  };
+
+  // ===== INIT =====
+  carregarTrabalhos();
+  carregarHistorias();
+</script>
+</body>
+</html>
